@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Retro Hub Launcher</string>
+    <string name="pick_root_folder">Wybierz folder główny z ROM-ami</string>
+    <string name="search_hint">Szukaj ROM-ów...</string>
+    <string name="phone_games">Gry telefonowe</string>
+    <string name="emulator_missing">Brak emulatora (%1$s). Zainstaluj go aby uruchamiać ROM-y.</string>
+</resources>
