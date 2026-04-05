@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Announcement Composer</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #1a1b1e;
+    --surface:   #25262b;
+    --surface2:  #2c2d32;
+    --border:    #373a40;
+    --accent:    #5865f2;
+    --accent2:   #eb459e;
+    --text:      #dcddde;
+    --muted:     #72767d;
+    --success:   #57f287;
+    --radius:    12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 16px 32px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .logo {
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing: 1.5px;
+    background: linear-gradient(90deg, #fff 60%, var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* ── LABEL ── */
+  .field-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .badge {
+    background: var(--accent);
+    color: #fff;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── TITLE INPUT ── */
+  .title-wrapper {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    transition: border-color 0.2s;
+  }
+  .title-wrapper:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(88,101,242,0.15);
+  }
+
+  #title-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #ffffff;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 1px;
+    caret-color: var(--accent);
+  }
+  #title-input::placeholder {
+    color: var(--muted);
+    opacity: 0.5;
+  }
+
+  /* ── BODY INPUT ── */
+  .body-wrapper {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 24px;
+    transition: border-color 0.2s;
+  }
+  .body-wrapper:focus-within {
+    border-color: var(--accent2);
+    box-shadow: 0 0 0 3px rgba(235,69,158,0.12);
+  }
+
+  #body-input {
+    width: 100%;
+    min-height: 130px;
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    caret-color: var(--accent2);
+  }
+  #body-input::placeholder {
+    color: var(--muted);
+    opacity: 0.5;
+  }
+
+  /* ── FILE UPLOAD ── */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 24px;
+    background: var(--surface2);
+  }
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(88,101,242,0.08);
+  }
+  .upload-zone p { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .upload-zone .icon { font-size: 28px; }
+  #file-input { display: none; }
+
+  .file-preview {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-top: 10px;
+  }
+  .file-preview.show { display: flex; }
+  .file-preview img { width: 48px; height: 48px; object-fit: cover; border-radius: 6px; }
+  .file-preview .file-info { flex: 1; min-width: 0; }
+  .file-preview .file-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .file-preview .file-size { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .file-preview .remove-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--muted); font-size: 18px; padding: 4px;
+    transition: color 0.15s;
+  }
+  .file-preview .remove-btn:hover { color: #ed4245; }
+
+  /* ── PREVIEW ── */
+  .section-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .discord-preview {
+    background: #36393f;
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 28px;
+    border-left: 4px solid var(--accent);
+  }
+
+  .discord-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .bot-avatar {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+  .bot-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: #fff;
+  }
+  .bot-tag {
+    background: var(--accent);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 3px;
+    letter-spacing: 0.3px;
+  }
+  .bot-time { font-size: 11px; color: var(--muted); margin-left: 4px; }
+
+  #preview-title {
+    font-weight: 800;
+    font-size: 15px;
+    color: #fff;
+    margin-bottom: 8px;
+    min-height: 20px;
+    word-break: break-word;
+  }
+  .separator { height: 14px; }
+  #preview-body {
+    font-size: 14px;
+    color: #dcddde;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    min-height: 18px;
+  }
+
+  /* ── SEND BUTTON ── */
+  .send-btn {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: var(--radius);
+    color: #fff;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    text-transform: uppercase;
+  }
+  .send-btn:hover  { opacity: 0.9; }
+  .send-btn:active { transform: scale(0.98); }
+  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── SUCCESS OVERLAY ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--success);
+    color: #000;
+    font-weight: 700;
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    z-index: 100;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  hr.divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 4px 0 20px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">📢</div>
+  <h1>Announcement Composer</h1>
+</header>
+
+<!-- TITLE -->
+<div class="field-label">
+  📌 Title (always bold)
+  <span class="badge">REQUIRED</span>
+</div>
+<div class="title-wrapper">
+  <input id="title-input" type="text" placeholder="SERVER UPDATE v2.0" maxlength="120" autocomplete="off">
+</div>
+
+<!-- BODY -->
+<div class="field-label">💬 Message Body</div>
+<div class="body-wrapper">
+  <textarea id="body-input" placeholder="Write your announcement here...&#10;&#10;It will appear below the title with two blank lines of spacing automatically." rows="5"></textarea>
+</div>
+
+<!-- FILE UPLOAD -->
+<div class="field-label">📎 Attach File (optional)</div>
+<div class="upload-zone" id="upload-zone">
+  <div class="icon">🖼️</div>
+  <p>Tap to attach image, video or file</p>
+  <input type="file" id="file-input" accept="image/*,video/*,.pdf,.zip,.rar,.txt,.mp3">
+</div>
+<div class="file-preview" id="file-preview">
+  <img id="preview-thumb" src="" alt="" style="display:none">
+  <div class="file-info">
+    <div class="file-name" id="preview-filename"></div>
+    <div class="file-size" id="preview-filesize"></div>
+  </div>
+  <button class="remove-btn" onclick="removeFile()">✕</button>
+</div>
+
+<hr class="divider">
+
+<!-- DISCORD PREVIEW -->
+<div class="section-title">👀 Discord Preview</div>
+<div class="discord-preview">
+  <div class="discord-meta">
+    <div class="bot-avatar">🤖</div>
+    <span class="bot-name">Announcements</span>
+    <span class="bot-tag">BOT</span>
+    <span class="bot-time">Today</span>
+  </div>
+  <div id="preview-title">YOUR TITLE HERE</div>
+  <div class="separator"></div>
+  <div id="preview-body">Your message body will appear here...</div>
+</div>
+
+<!-- SEND -->
+<button class="send-btn" id="send-btn" onclick="sendAnnouncement()">
+  📤 Send Announcement
+</button>
+
+<div class="toast" id="toast">✅ Sent to Discord!</div>
+
+<script>
+  const tg = window.Telegram?.WebApp;
+  if (tg) tg.ready();
+
+  const titleEl   = document.getElementById('title-input');
+  const bodyEl    = document.getElementById('body-input');
+  const prevTitle = document.getElementById('preview-title');
+  const prevBody  = document.getElementById('preview-body');
+  const toast     = document.getElementById('toast');
+  const sendBtn   = document.getElementById('send-btn');
+
+  let selectedFile = null;
+
+  // ── LIVE PREVIEW ──────────────────────────────────────────────────────────
+  titleEl.addEventListener('input', () => {
+    prevTitle.textContent = titleEl.value || 'YOUR TITLE HERE';
+  });
+  bodyEl.addEventListener('input', () => {
+    prevBody.textContent = bodyEl.value || 'Your message body will appear here...';
+  });
+
+  // ── FILE UPLOAD ────────────────────────────────────────────────────────────
+  const uploadZone  = document.getElementById('upload-zone');
+  const fileInput   = document.getElementById('file-input');
+  const filePreview = document.getElementById('file-preview');
+  const previewThumb= document.getElementById('preview-thumb');
+  const previewName = document.getElementById('preview-filename');
+  const previewSize = document.getElementById('preview-filesize');
+
+  uploadZone.addEventListener('click', () => fileInput.click());
+
+  uploadZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    uploadZone.classList.add('drag-over');
+  });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f) setFile(f);
+  });
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) setFile(fileInput.files[0]);
+  });
+
+  function setFile(file) {
+    selectedFile = file;
+    previewName.textContent = file.name;
+    previewSize.textContent = formatBytes(file.size);
+
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        previewThumb.src = e.target.result;
+        previewThumb.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    } else {
+      previewThumb.style.display = 'none';
+    }
+    filePreview.classList.add('show');
+    uploadZone.style.display = 'none';
+  }
+
+  function removeFile() {
+    selectedFile = null;
+    fileInput.value = '';
+    filePreview.classList.remove('show');
+    uploadZone.style.display = '';
+    previewThumb.style.display = 'none';
+  }
+
+  function formatBytes(bytes) {
+    if (bytes < 1024)       return bytes + ' B';
+    if (bytes < 1048576)    return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
+  }
+
+  // ── SEND ──────────────────────────────────────────────────────────────────
+  function sendAnnouncement() {
+    const title = titleEl.value.trim();
+    const body  = bodyEl.value.trim();
+
+    if (!title) {
+      titleEl.focus();
+      titleEl.parentElement.style.borderColor = '#ed4245';
+      setTimeout(() => titleEl.parentElement.style.borderColor = '', 1500);
+      return;
+    }
+
+    sendBtn.disabled = true;
+    sendBtn.textContent = '⏳ Sending...';
+
+    // Send data back to Telegram bot via WebApp
+    const payload = JSON.stringify({ title, body });
+    if (tg) {
+      tg.sendData(payload);
+    } else {
+      // Fallback for testing outside Telegram
+      console.log('Would send:', payload);
+      showToast();
+    }
+  }
+
+  function showToast() {
+    toast.classList.add('show');
+    setTimeout(() => {
+      toast.classList.remove('show');
+      sendBtn.disabled = false;
+      sendBtn.textContent = '📤 Send Announcement';
+    }, 2500);
+  }
+
+  // Listen for Telegram confirmation
+  if (tg) {
+    tg.onEvent('webAppDataSent', () => showToast());
+  }
+</script>
+</body>
+</html>
